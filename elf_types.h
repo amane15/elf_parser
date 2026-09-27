@@ -1,0 +1,58 @@
+#ifndef ELF_TYPES_H
+#define ELF_TYPES_H
+
+typedef enum {
+  ELFUNKNOWN,
+  ELF32,
+  ELF64,
+} ELFClass;
+
+typedef enum {
+  LittleEndian = 1,
+  BigEndian,
+} ELFDataEnc;
+
+typedef enum {
+  ELFOSABI_SYSV = 0,
+  ELFOSABI_HPUX = 1,
+  ELFOSABI_NETBSD = 2,
+  ELFOSABI_LINUX = 3,
+  ELFOSABI_HURD = 4,
+  ELFOSABI_SOLARIS = 6,
+  ELFOSABI_AIX = 7,
+  ELFOSABI_IRIX = 8,
+  ELFOSABI_FREEBSD = 9,
+  ELFOSABI_TRU64 = 10,
+  ELFOSABI_MODESTO = 11,
+  ELFOSABI_OPENBSD = 12,
+  ELFOSABI_OPENVMS = 13,
+  ELFOSABI_NSK = 14,
+  ELFOSABI_AROS = 15,
+  ELFOSABI_FENIXOS = 16,
+  ELFOSABI_CLOUDABI = 17,
+  ELFOSABI_OPENVOS = 18,
+} ELFOsAbi;
+
+typedef enum {
+  ET_NONE,
+  ET_REL,
+  ET_EXEC,
+  ET_DYN,
+  ET_CORE,
+  ET_LOPROC = 0xff00,
+  ET_HIPROC = 0xffff,
+} ELFEtype;
+
+typedef enum {
+  EM_NONE = 0,
+  EM_386 = 3,
+  EM_MIPS = 8,
+  EM_PPC = 20,
+  EM_PPC64 = 21,
+  EM_ARM = 40,
+  EM_X86_64 = 62,
+  EM_AARCH64 = 183,
+  EM_RISCV = 243,
+} ELFEMacine;
+
+#endif

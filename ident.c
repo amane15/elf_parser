@@ -1,4 +1,5 @@
 #include "ident.h"
+#include "elf_types.h"
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -221,18 +222,73 @@ bool parse_rest_header(FILE *fp, ELFIdent *ident, ELFHeaderRest *rest) {
   return true;
 }
 
+static void print_e_type(uint16_t type) {
+  printf("Type: ");
+  switch (type) {
+  case ET_REL:
+    printf("Relocatable file\n");
+    break;
+  case ET_EXEC:
+    printf("Executable file\n");
+    break;
+  case ET_DYN:
+    printf("Shared object file\n");
+    break;
+  case ET_CORE:
+    printf("Core file\n");
+    break;
+  default:
+    printf("Unknown e_type: %u\n", type);
+  }
+}
+
+static void print_e_machine(uint16_t machine) {
+  printf("Machine: ");
+  switch (machine) {
+  case EM_386:
+    printf("Intel 80386 (32-bit x86)\n");
+    break;
+  case EM_ARM:
+    printf("ARM 32-bit\n");
+    break;
+  case EM_X86_64:
+    printf("AMD x86-64 (64-bit AMD/Intel Architecture)\n");
+    break;
+  case EM_AARCH64:
+    printf("ARM 64-bit\n");
+    break;
+  case EM_PPC:
+    printf("Power PC 32-bit\n");
+    break;
+  case EM_PPC64:
+    printf("Power PC 64-bit\n");
+    break;
+  case EM_MIPS:
+    printf("MIPS R3000 / general MIPS\n");
+    break;
+  case EM_RISCV:
+    printf("RISC-V\n");
+    break;
+
+  default:
+    printf("Unknown machine type: %u\n", machine);
+  }
+}
+
 void print_elf_rest_header(ELFHeaderRest *rest) {
-  printf("Type: %u\n", rest->e_type);
-  printf("Machine: %u\n", rest->e_machine);
+  print_e_type(rest->e_type);
+  print_e_machine(rest->e_machine);
   printf("Version: 0x%" PRIx32 "\n", rest->e_version);
-  printf("Entry: 0x%" PRIx64 "\n", rest->e_entry);
-  printf("Phoff: %lu\n", rest->e_phoff);
-  printf("Shoff: %lu\n", rest->e_shoff);
+  printf("Entry point address: 0x%" PRIx64 "\n", rest->e_entry);
+  printf("Program header table offset: %" PRIu64 " (bytes into file)\n",
+         rest->e_phoff);
+  printf("Section header table offset: %" PRIu64 " (bytes into file)\n",
+         rest->e_shoff);
   printf("EFlags: 0x%" PRIx32 "\n", rest->e_flags);
-  printf("Ehsize: %u\n", rest->e_ehsize);
-  printf("Phentize: %u\n", rest->e_phentsize);
-  printf("Phnum: %u\n", rest->e_phnum);
-  printf("Shentsize: %u\n", rest->e_shentsize);
-  printf("Shnum: %u\n", rest->e_shnum);
-  printf("Shstridx: %u\n", rest->e_shstrndx);
+  printf("Elf header size: %u (in bytes)\n", rest->e_ehsize);
+  printf("Size of program header: %u (bytes)\n", rest->e_phentsize);
+  printf("Number of program headers: %u\n", rest->e_phnum);
+  printf("Size of section header: %u (bytes)\n", rest->e_shentsize);
+  printf("Number of section headers: %u\n", rest->e_shnum);
+  printf("Section header string table index: %u\n", rest->e_shstrndx);
 }
