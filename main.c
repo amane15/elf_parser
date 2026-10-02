@@ -1,4 +1,5 @@
 #include "elf_header.h"
+#include "elf_program.h"
 #include <stdio.h>
 
 int main(int argc, char *argv[]) {
@@ -35,6 +36,25 @@ int main(int argc, char *argv[]) {
   }
 
   print_elf_rest_header(&rest);
+
+  ELF64ProgramHeader p_headers[rest.e_phnum];
+  unsigned char ph_buf[rest.e_phentsize];
+
+  fseek(file, rest.e_phoff, SEEK_SET);
+
+  for (int i = 0; i < rest.e_phnum; i++) {
+    if (fread(ph_buf, 1, rest.e_phentsize, file) != rest.e_phentsize) {
+      fprintf(stderr, "failed to read program header\n");
+      return 1;
+    }
+    parse_pg_header(ph_buf, &p_headers[i], elf_ident_header.ei_data);
+  }
+
+  for (int i = 0; i < rest.e_phnum; i++) {
+    printf("=== Program header %d start ===\n", i + 1);
+    print_program_header(&p_headers[i]);
+    printf("=== Program header %d end ===\n", i + 1);
+  }
 
   fclose(file);
   return 0;
