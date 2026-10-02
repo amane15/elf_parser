@@ -1,4 +1,4 @@
-#include "ident.h"
+#include "elf_header.h"
 #include <stdio.h>
 
 int main(int argc, char *argv[]) {
