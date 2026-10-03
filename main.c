@@ -50,11 +50,12 @@ int main(int argc, char *argv[]) {
     parse_pg_header(ph_buf, &p_headers[i], elf_ident_header.ei_data);
   }
 
-  for (int i = 0; i < rest.e_phnum; i++) {
-    printf("=== Program header %d start ===\n", i + 1);
-    print_program_header(&p_headers[i]);
-    printf("=== Program header %d end ===\n", i + 1);
-  }
+  printf("Program headers: \n");
+  // for (int i = 0; i < rest.e_phnum; i++) {
+  // printf("=== Program header %d start ===\n", i + 1);
+  print_program_header_fmt(p_headers, rest.e_phnum, file);
+  // printf("=== Program header %d end ===\n", i + 1);
+  // }
 
   fclose(file);
   return 0;

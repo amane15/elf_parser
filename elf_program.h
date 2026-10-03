@@ -3,7 +3,11 @@
 
 #include "elf_types.h"
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
+#include <stdio.h>
+
+#define PT_TYPE_STR_LEN 32
 
 typedef struct {
   uint32_t p_type;
@@ -46,5 +50,7 @@ bool parse_pg_header(const unsigned char *buf, ELF64ProgramHeader *p_header,
                      ELFDataEnc ei_data);
 
 void print_program_header(ELF64ProgramHeader *pg_header);
+void print_program_header_fmt(ELF64ProgramHeader pg_header[], size_t phnum,
+                              FILE *fp);
 
 #endif

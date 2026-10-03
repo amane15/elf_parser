@@ -36,76 +36,94 @@ bool parse_pg_header(const unsigned char *buf, ELF64ProgramHeader *p_header,
   return true;
 }
 
-static void print_p_type(uint32_t p_type) {
-  printf("p_type: ");
+static const char *pt_type(uint32_t p_type) {
   switch (p_type) {
   case 0:
-    printf("NULL\n");
-    break;
+    return "NULL";
   case 1:
-    printf("LOAD\n");
-    break;
+    return "LOAD";
   case 2:
-    printf("DYNAMIC\n");
-    break;
+    return "DYNAMIC";
   case 3:
-    printf("INTERP\n");
-    break;
+    return "INTERP";
   case 4:
-    printf("NOTE\n");
-    break;
+    return "NOTE";
   case 5:
-    printf("SHLIB\n");
-    break;
+    return "SHLIB";
   case 6:
-    printf("PHDR\n");
-    break;
+    return "PHDR";
   case 7:
-    printf("TLS\n");
-    break;
+    return "TLS";
 
   case PT_GNU_EH_FRAME:
-    printf("PT_GNU_EH_FRAME\n");
-    break;
+    return "PT_GNU_EH_FRAME";
   case PT_GNU_STACK:
-    printf("PT_GNU_STACK\n");
-    break;
+    return "PT_GNU_STACK";
   case PT_GNU_RELRO:
-    printf("PT_GNU_RELRO\n");
-    break;
+    return "PT_GNU_RELRO";
   case PT_GNU_PROPERTY:
-    printf("PT_GNU_PROPERTY\n");
-    break;
+    return "PT_GNU_PROPERTY";
   case PT_GNU_SFRAME:
-    printf("PT_GNU_SFRAME\n");
-    break;
+    return "PT_GNU_SFRAME";
 
   default:
     if (p_type >= PT_LOOS && p_type <= PT_HIOS) {
-      printf("OS SPECIFIC\n");
+      return "OS SPECIFIC";
     } else if (p_type >= PT_LOPROC && p_type <= PT_HIPROC) {
-      printf("PROCESSOR SPECIFIC\n");
+      return "PROCESSOR SPECIFIC";
     } else {
-      printf("Unknown: 0x%" PRIx32 "\n", p_type);
+      return "Unknown";
     }
   }
 }
 
-static void print_pg_flags(uint32_t flags) {
-  printf("p_flags: ");
-  printf("%c%c%c", (flags & PF_R) ? 'R' : ' ', (flags & PF_W) ? 'W' : ' ',
-         (flags & PF_X) ? 'E' : ' ');
-  printf("\n");
+static void pghdr_flags(uint32_t flags, char out[4]) {
+  out[0] = (flags & PF_R) ? 'R' : ' ';
+  out[1] = (flags & PF_W) ? 'W' : ' ';
+  out[2] = (flags & PF_X) ? 'E' : ' ';
+  out[3] = '\0';
 }
 
 void print_program_header(ELF64ProgramHeader *pg_header) {
-  print_p_type(pg_header->p_type);
-  print_pg_flags(pg_header->p_flags);
-  // printf("p_flags: 0x%" PRIx32 "\n", pg_header->p_flags);
+  char flags[4];
+  pghdr_flags(pg_header->p_flags, flags);
+
+  printf("p_type: %s\n", pt_type(pg_header->p_type));
+  printf("p_flags: %s\n", flags);
   printf("p_offset: 0x%" PRIx64 "\n", pg_header->p_offset);
   printf("p_vaddr: 0x%" PRIx64 "\n", pg_header->p_vaddr);
   printf("p_paddr: 0x%" PRIx64 "\n", pg_header->p_paddr);
   printf("p_filesz: 0x%" PRIx64 "\n", pg_header->p_filesz);
   printf("p_memsz: 0x%" PRIx64 "\n", pg_header->p_memsz);
   printf("p_align: 0x%" PRIx64 "\n", pg_header->p_align);
+}
+
+void print_program_header_fmt(ELF64ProgramHeader phdrs[], size_t phnum,
+                              FILE *fp) {
+  printf("%-16s %-10s %-10s %-10s %-10s %-10s %-4s %-8s \n", "Type", "Offset",
+         "VirtAddr", "PhysAddr", "Filesz", "Memsz", "Flag", "Align");
+
+  for (size_t i = 0; i < phnum; i++) {
+    ELF64ProgramHeader phdr = phdrs[i];
+    const char *type = pt_type(phdr.p_type);
+    char flags[4];
+    pghdr_flags(phdr.p_flags, flags);
+
+    printf("%-16s 0x%08" PRIx64 " 0x%08" PRIx64 " 0x%08" PRIx64 " 0x%08" PRIx64
+           " 0x%08" PRIx64 " %-3s 0x%" PRIx64 "\n",
+           type, phdr.p_offset, phdr.p_vaddr, phdr.p_paddr, phdr.p_filesz,
+           phdr.p_memsz, flags, phdr.p_align);
+
+    if (phdr.p_type == PT_INTERP) {
+      char buf[phdr.p_filesz + 1];
+      fseek(fp, phdr.p_offset, SEEK_SET);
+      if (fread(buf, 1, phdr.p_filesz, fp) != phdr.p_filesz) {
+        fprintf(stdout, "Error loading interp exec name");
+        continue;
+      }
+
+      buf[phdr.p_filesz] = '\0';
+      printf("    Requesting program interpreter: %s\n", buf);
+    }
+  }
 }
