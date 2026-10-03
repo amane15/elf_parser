@@ -36,6 +36,12 @@ typedef enum {
   PT_HIPROC = 0x7fffffff,
 } PGH_PTYPE;
 
+typedef enum {
+  PF_X = 1,
+  PF_W = 2,
+  PF_R = 4,
+} PT_FLAGS;
+
 bool parse_pg_header(const unsigned char *buf, ELF64ProgramHeader *p_header,
                      ELFDataEnc ei_data);
 

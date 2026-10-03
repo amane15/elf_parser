@@ -91,9 +91,17 @@ static void print_p_type(uint32_t p_type) {
   }
 }
 
+static void print_pg_flags(uint32_t flags) {
+  printf("p_flags: ");
+  printf("%c%c%c", (flags & PF_R) ? 'R' : ' ', (flags & PF_W) ? 'W' : ' ',
+         (flags & PF_X) ? 'E' : ' ');
+  printf("\n");
+}
+
 void print_program_header(ELF64ProgramHeader *pg_header) {
   print_p_type(pg_header->p_type);
-  printf("p_flags: 0x%" PRIx32 "\n", pg_header->p_flags);
+  print_pg_flags(pg_header->p_flags);
+  // printf("p_flags: 0x%" PRIx32 "\n", pg_header->p_flags);
   printf("p_offset: 0x%" PRIx64 "\n", pg_header->p_offset);
   printf("p_vaddr: 0x%" PRIx64 "\n", pg_header->p_vaddr);
   printf("p_paddr: 0x%" PRIx64 "\n", pg_header->p_paddr);
