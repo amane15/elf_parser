@@ -1,5 +1,8 @@
 #include "elf_program.h"
+#include "elf_dynamic.h"
 #include "elf_reader.h"
+#include "elf_types.h"
+#include <endian.h>
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -124,6 +127,20 @@ void print_program_header_fmt(ELF64ProgramHeader phdrs[], size_t phnum,
 
       buf[phdr.p_filesz] = '\0';
       printf("    Requesting program interpreter: %s\n", buf);
+    }
+
+    if (phdr.p_type == PT_DYNAMIC) {
+      uint64_t entries = phdr.p_filesz / 16;
+      ELF64_Dyn dyn_entries[entries];
+
+      // temp assume little endian
+      int result = parse_dyn_tb(fp, &phdr, dyn_entries, LittleEndian);
+      if (result != 0) {
+        fprintf(stderr, "Error parsing dynamic table");
+        return;
+      }
+
+      print_dyn_tb(dyn_entries, entries);
     }
   }
 }
