@@ -2,6 +2,7 @@
 #define ELF_PROGRAM_H
 
 #include "elf_types.h"
+#include "parser.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -18,7 +19,7 @@ typedef struct {
   uint64_t p_filesz;
   uint64_t p_memsz;
   uint64_t p_align;
-} ELF64ProgramHeader;
+} Elf64_Phdr;
 
 typedef enum {
   PT_NULL = 0,
@@ -46,11 +47,13 @@ typedef enum {
   PF_R = 4,
 } PT_FLAGS;
 
-bool parse_pg_header(const unsigned char *buf, ELF64ProgramHeader *p_header,
-                     ELFDataEnc ei_data);
+// Elf64_Phdr *parse_pg_header(Parser *parser);
+void parse_pg_header(unsigned char *buf, Elf64_Phdr *phdr,
+                     ELFDataEnc endianess);
+Elf64_Phdr *parse_pg_headers(Parser *parser, uint16_t phnum, uint16_t phentsize,
+                             uint64_t phoff);
 
-void print_program_header(ELF64ProgramHeader *pg_header);
-void print_program_header_fmt(ELF64ProgramHeader pg_header[], size_t phnum,
-                              FILE *fp);
+void print_program_header(Elf64_Phdr *phdrs, uint16_t phnum);
+void print_program_header_fmt(Elf64_Phdr *phdrs, uint16_t phnum);
 
 #endif

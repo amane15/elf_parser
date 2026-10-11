@@ -1,7 +1,7 @@
 #ifndef ELF_IDENT_H
 #define ELF_IDENT_H
 
-#include <endian.h>
+#include "parser.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -34,8 +34,8 @@ typedef struct {
 
 void print_ident_info(ELFIdent *info);
 void print_osabi(unsigned char ei_osabi);
-bool parse_ident_data(FILE *fp, ELFIdent *ident);
-bool parse_rest_header(FILE *fp, ELFIdent *ident, ELFHeaderRest *rest);
+ELFIdent *parse_ident_header(Parser *parser);
+ELFHeaderRest *parse_rest_header(Parser *parser);
 void print_elf_rest_header(ELFHeaderRest *header);
 
 #endif

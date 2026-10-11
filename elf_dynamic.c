@@ -6,18 +6,14 @@
 #include <stdint.h>
 #include <stdio.h>
 
-int parse_dyn_tb(FILE *fp, ELF64ProgramHeader *dyn_header,
-                 ELF64_Dyn dyn_entries[], ELFDataEnc endianess) {
+// In case of success return number of dynamic entries, in case of failure
+// return negative value
+int parse_dyn_tb(FILE *fp, Elf64_Phdr *dyn_header, ELF64_Dyn dyn_entries[],
+                 ELFDataEnc endianess) {
   if (dyn_header->p_type != PT_DYNAMIC) {
     fprintf(stderr, "Non dynamic header is passed");
     return -1;
   }
-
-  uint64_t total_dyn_entries = dyn_header->p_filesz / sizeof(ELF64_Dyn);
-
-  printf("Dynamic section at the offset %" PRIx64 " contains %" PRId64
-         " entries\n",
-         dyn_header->p_offset, total_dyn_entries);
 
   if (fseek(fp, (long)dyn_header->p_offset, SEEK_SET) != 0) {
     fprintf(stderr, "Failed to seek PT_DYNAMIC\n");
@@ -32,18 +28,27 @@ int parse_dyn_tb(FILE *fp, ELF64ProgramHeader *dyn_header,
   }
 
   size_t offset = 0;
-  for (uint64_t i = 0; i < total_dyn_entries; i++) {
+  int num_of_entries = dyn_header->p_filesz / sizeof(ELF64_Dyn);
+
+  for (int i = 0;; i++) {
+    if (dyn_entries[i].d_tag == DT_NULL)
+      break;
+
     dyn_entries[i].d_tag = read_u64(buf + offset, endianess);
     offset += 8;
     dyn_entries[i].d_val = read_u64(buf + offset, endianess);
     offset += 8;
   }
 
-  return 0;
+  return num_of_entries;
 }
 
-void print_dyn_tb(ELF64_Dyn *dyn_entries, size_t entries) {
-  for (size_t i = 0; i < entries; i++) {
+void print_dyn_tb(ELF64_Dyn *dyn_entries, uint64_t section_offset,
+                  int entries) {
+  printf("Dynamic section at the offset %" PRIx64 " contains %d"
+         " entries\n",
+         section_offset, entries);
+  for (int i = 0; i < entries; i++) {
     printf("Tag: %" PRIx64 "\n", dyn_entries[i].d_tag);
     printf("Val: %" PRIx64 "\n", dyn_entries[i].d_val);
   }

@@ -5,20 +5,28 @@
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
-bool parse_ident_data(FILE *file, ELFIdent *ident) {
+ELFIdent *parse_ident_header(Parser *parser) {
   unsigned char start_buffer[ELF_IDENT_SIZE];
 
-  size_t start_bytes_read = fread(start_buffer, 1, ELF_IDENT_SIZE, file);
+  size_t start_bytes_read =
+      fread(start_buffer, 1, ELF_IDENT_SIZE, parser->file);
   if (start_bytes_read != ELF_IDENT_SIZE) {
     fprintf(stderr, "Error: file is too small to contain an elf header\n");
-    return false;
+    return NULL;
   }
 
   if (start_buffer[0] != 0x7f || start_buffer[1] != 'E' ||
       start_buffer[2] != 'L' || start_buffer[3] != 'F') {
     fprintf(stderr, "Given file is not elf file\n");
-    return false;
+    return NULL;
+  }
+
+  ELFIdent *ident = (ELFIdent *)malloc(sizeof(ELFIdent));
+  if (ident == NULL) {
+    fprintf(stderr, "Memor allocation error\n");
+    return NULL;
   }
 
   ident->ei_class = start_buffer[4];
@@ -27,7 +35,7 @@ bool parse_ident_data(FILE *file, ELFIdent *ident) {
   ident->ei_osabi = start_buffer[7];
   ident->ei_abiversion = start_buffer[8];
 
-  return true;
+  return ident;
 }
 
 void print_ident_info(ELFIdent *info) {
@@ -130,15 +138,25 @@ void print_osabi(unsigned char ei_osabi) {
   }
 }
 
-bool parse_rest_header(FILE *fp, ELFIdent *ident, ELFHeaderRest *rest) {
-  ELFDataEnc byte_order =
-      ident->ei_data == LittleEndian ? LittleEndian : BigEndian;
-  size_t rem_header_size = (ident->ei_class == ELF64) ? 48 : 36;
+ELFHeaderRest *parse_rest_header(Parser *parser) {
+  ELFDataEnc byte_order = parser->endianess;
+  size_t rem_header_size = (parser->ei_class == ELF64) ? 48 : 36;
+
+  if (fseek(parser->file, 16, SEEK_SET) != 0) {
+    fprintf(stderr, "Failed to seek elf header\n");
+    return NULL;
+  }
 
   unsigned char buffer[48];
-  if (fread(buffer, 1, rem_header_size, fp) != rem_header_size) {
+  if (fread(buffer, 1, rem_header_size, parser->file) != rem_header_size) {
     fprintf(stderr, "File is too small to contain an elf header\n");
-    return false;
+    return NULL;
+  }
+
+  ELFHeaderRest *rest = (ELFHeaderRest *)malloc(sizeof(ELFHeaderRest));
+  if (rest == NULL) {
+    fprintf(stderr, "Memory allocation error\n");
+    return NULL;
   }
 
   size_t offset = 0;
@@ -151,7 +169,7 @@ bool parse_rest_header(FILE *fp, ELFIdent *ident, ELFHeaderRest *rest) {
   rest->e_version = read_u32(buffer + offset, byte_order);
   offset += 4;
 
-  if (ident->ei_class == ELF64) {
+  if (parser->ei_class == ELF64) {
     rest->e_entry = read_u64(buffer + offset, byte_order);
     offset += 8;
 
@@ -192,7 +210,7 @@ bool parse_rest_header(FILE *fp, ELFIdent *ident, ELFHeaderRest *rest) {
   rest->e_shstrndx = read_u16(buffer + offset, byte_order);
   offset += 2;
 
-  return true;
+  return rest;
 }
 
 static void print_e_type(uint16_t type) {
