@@ -3,6 +3,7 @@
 
 #include "elf_program.h"
 #include "elf_types.h"
+#include "parser.h"
 #include <stdint.h>
 #include <stdio.h>
 
@@ -10,6 +11,11 @@ typedef struct {
   int64_t d_tag;
   uint64_t d_val;
 } ELF64_Dyn;
+
+typedef struct {
+  ELF64_Dyn *entries;
+  size_t length;
+} Dyn_Table;
 
 typedef enum {
   DT_NULL = 0,
@@ -41,9 +47,8 @@ typedef enum {
   DT_HIPROC = 0x7fffffff,
 } ELF64_Dtag;
 
-int parse_dyn_tb(FILE *fp, Elf64_Phdr *dyn_header, ELF64_Dyn dyn_entries[],
-                 ELFDataEnc endianess);
-void print_dyn_tb(ELF64_Dyn dyn_entries[], uint64_t section_offset,
-                  int entries);
+Dyn_Table *parse_dyn_tb(Parser *parser, Elf64_Phdr *dyn_header);
+void print_dyn_tb(ELF64_Dyn *dyn_entries, uint64_t section_offset, int entries);
+void free_dyn_table(Dyn_Table *table);
 
 #endif
