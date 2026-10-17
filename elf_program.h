@@ -21,6 +21,11 @@ typedef struct {
   uint64_t p_align;
 } Elf64_Phdr;
 
+typedef struct {
+  Elf64_Phdr *entries;
+  size_t length;
+} Phdr_Table;
+
 typedef enum {
   PT_NULL = 0,
   PT_LOAD,
@@ -50,10 +55,10 @@ typedef enum {
 // Elf64_Phdr *parse_pg_header(Parser *parser);
 void parse_pg_header(unsigned char *buf, Elf64_Phdr *phdr,
                      ELFDataEnc endianess);
-Elf64_Phdr *parse_pg_headers(Parser *parser, uint16_t phnum, uint16_t phentsize,
+Phdr_Table *parse_pg_headers(Parser *parser, uint16_t phnum, uint16_t phentsize,
                              uint64_t phoff);
 
-void print_program_header(Elf64_Phdr *phdrs, uint16_t phnum);
-void print_program_header_fmt(Elf64_Phdr *phdrs, uint16_t phnum);
+void print_program_header(Phdr_Table *table);
+void print_program_header_fmt(Phdr_Table *table);
 
 #endif

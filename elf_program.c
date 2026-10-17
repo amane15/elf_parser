@@ -38,7 +38,7 @@ void parse_pg_header(unsigned char *buf, Elf64_Phdr *phdr,
   offset += 8;
 }
 
-Elf64_Phdr *parse_pg_headers(Parser *parser, uint16_t phnum, uint16_t phentsize,
+Phdr_Table *parse_pg_headers(Parser *parser, uint16_t phnum, uint16_t phentsize,
                              uint64_t phoff) {
   if (phentsize != sizeof(Elf64_Phdr)) {
     fprintf(stderr, "Unexpected program header size\n");
@@ -81,7 +81,17 @@ Elf64_Phdr *parse_pg_headers(Parser *parser, uint16_t phnum, uint16_t phentsize,
   }
 
   free(buf);
-  return phdrs;
+  Phdr_Table *table = malloc(sizeof(Phdr_Table));
+  if (table == NULL) {
+    fprintf(stderr, "Malloc error\n");
+    free(phdrs);
+    return NULL;
+  }
+
+  table->entries = phdrs;
+  table->length = phnum;
+
+  return table;
 }
 
 static const char *pt_type(uint32_t p_type) {
@@ -132,8 +142,10 @@ static void pghdr_flags(uint32_t flags, char out[4]) {
   out[3] = '\0';
 }
 
-void print_program_header(Elf64_Phdr *phdrs, uint16_t phnum) {
-  for (size_t i = 0; i < phnum; i++) {
+void print_program_header(Phdr_Table *table) {
+  Elf64_Phdr *phdrs = table->entries;
+
+  for (size_t i = 0; i < table->length; i++) {
     char flags[4];
     pghdr_flags(phdrs[i].p_flags, flags);
 
@@ -148,11 +160,12 @@ void print_program_header(Elf64_Phdr *phdrs, uint16_t phnum) {
   }
 }
 
-void print_program_header_fmt(Elf64_Phdr *phdrs, uint16_t phnum) {
+void print_program_header_fmt(Phdr_Table *table) {
   printf("%-16s %-10s %-10s %-10s %-10s %-10s %-4s %-8s \n", "Type", "Offset",
          "VirtAddr", "PhysAddr", "Filesz", "Memsz", "Flag", "Align");
 
-  for (size_t i = 0; i < phnum; i++) {
+  Elf64_Phdr *phdrs = table->entries;
+  for (size_t i = 0; i < table->length; i++) {
     Elf64_Phdr phdr = phdrs[i];
     const char *type = pt_type(phdr.p_type);
     char flags[4];
