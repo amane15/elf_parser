@@ -14,6 +14,7 @@ typedef struct {
 
 typedef struct {
   ELF64_Dyn *entries;
+  uint64_t section_offset;
   size_t length;
 } Dyn_Table;
 
@@ -43,12 +44,23 @@ typedef enum {
   DT_TEXTREL,
   DT_JMPREL,
   DT_BIND_NOW,
+  DT_INIT_ARRAY = 0x19,
+  DT_FINIARRAY = 0x1a,
+  DT_INITARRYSZ = 0x1b,
+  DT_FINIARRAYSZ = 0x1c,
+  DT_GNU_HASH = 0x6ffffef5,
+  DT_FLAGS_1 = 0x6ffffffb,
+  DT_VERNEED = 0x6ffffffe,
+  DT_VERNEEDNUM = 0x6fffffff,
+  DT_VERSYM = 0x6ffffff0,
+  DT_RELACOUT = 0x6ffffff9,
   DT_LOPROC = 0x70000000,
   DT_HIPROC = 0x7fffffff,
 } ELF64_Dtag;
 
-Dyn_Table *parse_dyn_tb(Parser *parser, Elf64_Phdr *dyn_header);
-void print_dyn_tb(ELF64_Dyn *dyn_entries, uint64_t section_offset, int entries);
+Dyn_Table *parse_dyn_tb(Parser *parser, Phdr_Table *phdrs_table);
+void print_dyn_tb(Dyn_Table *table);
+void print_dyn_tb_fmt(Dyn_Table *table);
 void free_dyn_table(Dyn_Table *table);
 
 #endif

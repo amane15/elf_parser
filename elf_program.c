@@ -177,3 +177,11 @@ void print_program_header_fmt(Phdr_Table *table) {
            phdr.p_memsz, flags, phdr.p_align);
   }
 }
+
+void free_phdr_table(Phdr_Table *table) {
+  if (table == NULL)
+    return;
+
+  free(table->entries);
+  free(table);
+}

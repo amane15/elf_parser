@@ -1,3 +1,4 @@
+#include "elf_dynamic.h"
 #include "elf_header.h"
 #include "elf_program.h"
 #include "parser.h"
@@ -42,14 +43,23 @@ int main(int argc, char *argv[]) {
 
   print_elf_rest_header(rest);
 
-  Elf64_Phdr *phdrs = parse_pg_headers(&parser, rest->e_phnum,
-                                       rest->e_phentsize, rest->e_phoff);
+  Phdr_Table *phdrs_table = parse_pg_headers(&parser, rest->e_phnum,
+                                             rest->e_phentsize, rest->e_phoff);
   printf("Program headers: \n");
-  print_program_header_fmt(phdrs, rest->e_phnum);
+  print_program_header_fmt(phdrs_table);
+
+  Dyn_Table *dyn_table = parse_dyn_tb(&parser, phdrs_table);
+  if (dyn_table == NULL) {
+    fprintf(stderr, "Error while parsing dynamic table\n");
+    return 1;
+  }
+  print_dyn_tb_fmt(dyn_table);
 
   free(ident);
   free(rest);
-  free(phdrs);
+
+  free_phdr_table(phdrs_table);
+
   fclose(file);
   return 0;
 }

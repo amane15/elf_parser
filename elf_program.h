@@ -61,4 +61,6 @@ Phdr_Table *parse_pg_headers(Parser *parser, uint16_t phnum, uint16_t phentsize,
 void print_program_header(Phdr_Table *table);
 void print_program_header_fmt(Phdr_Table *table);
 
+void free_phdr_table(Phdr_Table *table);
+
 #endif
