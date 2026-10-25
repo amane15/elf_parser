@@ -10,6 +10,11 @@
 ELFIdent *parse_ident_header(Parser *parser) {
   unsigned char start_buffer[ELF_IDENT_SIZE];
 
+  if (fseek(parser->file, 0, SEEK_SET) != 0) {
+    fprintf(stderr, "Failed to seek elf header\n");
+    return NULL;
+  }
+
   size_t start_bytes_read =
       fread(start_buffer, 1, ELF_IDENT_SIZE, parser->file);
   if (start_bytes_read != ELF_IDENT_SIZE) {
@@ -38,107 +43,7 @@ ELFIdent *parse_ident_header(Parser *parser) {
   return ident;
 }
 
-void print_ident_info(ELFIdent *info) {
-  printf("ELF Class: ");
-  switch (info->ei_class) {
-  case ELF32:
-    printf("ELF32\n");
-    break;
-  case ELF64:
-    printf("ELF64\n");
-    break;
-
-  default:
-    printf("Unknown: (%u)\n", info->ei_class);
-    break;
-  }
-
-  printf("Endianess: ");
-  switch (info->ei_data) {
-  case LittleEndian:
-    printf("Little Endian\n");
-    break;
-  case BigEndian:
-    printf("Big Endian\n");
-    break;
-  default:
-    printf("Unknown (%u)\n", info->ei_data);
-  }
-
-  printf("ELF Version: %u\n", info->ei_version);
-  print_osabi(info->ei_osabi);
-
-  printf("ABI Version: %u\n", info->ei_abiversion);
-}
-
-void print_osabi(unsigned char ei_osabi) {
-  // ident.c
-  printf("ABI: ");
-  switch (ei_osabi) {
-  case ELFOSABI_SYSV:
-    printf("System V\n");
-    break;
-  case ELFOSABI_HPUX:
-    printf("HP-UX\n");
-    break;
-  case ELFOSABI_NETBSD:
-    printf("NetBSD\n");
-    break;
-  case ELFOSABI_LINUX:
-    printf("Linux\n");
-    break;
-  case ELFOSABI_HURD:
-    printf("GNU Hurd\n");
-    break;
-  case ELFOSABI_SOLARIS:
-    printf("Solaris\n");
-    break;
-  case ELFOSABI_AIX:
-    printf("AIX\n");
-    break;
-  case ELFOSABI_IRIX:
-    printf("IRIX\n");
-    break;
-  case ELFOSABI_FREEBSD:
-    printf("FreeBSD\n");
-    break;
-  case ELFOSABI_TRU64:
-    printf("Tru64\n");
-    break;
-  case ELFOSABI_MODESTO:
-    printf("Novell Modesto\n");
-    break;
-  case ELFOSABI_OPENBSD:
-    printf("OpenBSD\n");
-    break;
-  case ELFOSABI_OPENVMS:
-    printf("OpenVMS\n");
-    break;
-  case ELFOSABI_NSK:
-    printf("NonStop Kernel\n");
-    break;
-  case ELFOSABI_AROS:
-    printf("AROS\n");
-    break;
-  case ELFOSABI_FENIXOS:
-    printf("FenixOS\n");
-    break;
-  case ELFOSABI_CLOUDABI:
-    printf("CloudABI\n");
-    break;
-  case ELFOSABI_OPENVOS:
-    printf("Open VOS\n");
-    break;
-  default:
-    if (ei_osabi >= 64)
-      printf("Architecture-specific (%u)\n", ei_osabi);
-    else
-      printf("Unknown (%u)\n", ei_osabi);
-    break;
-  }
-}
-
-ELFHeaderRest *parse_rest_header(Parser *parser) {
+ELFHeader *parse_rest_header(Parser *parser) {
   ELFDataEnc byte_order = parser->endianess;
   size_t rem_header_size = (parser->ei_class == ELF64) ? 48 : 36;
 
@@ -153,7 +58,7 @@ ELFHeaderRest *parse_rest_header(Parser *parser) {
     return NULL;
   }
 
-  ELFHeaderRest *rest = (ELFHeaderRest *)malloc(sizeof(ELFHeaderRest));
+  ELFHeader *rest = (ELFHeader *)malloc(sizeof(ELFHeader));
   if (rest == NULL) {
     fprintf(stderr, "Memory allocation error\n");
     return NULL;
@@ -266,7 +171,7 @@ static void print_e_machine(uint16_t machine) {
   }
 }
 
-void print_elf_rest_header(ELFHeaderRest *rest) {
+void print_elf_rest_header(ELFHeader *rest) {
   print_e_type(rest->e_type);
   print_e_machine(rest->e_machine);
   printf("Version: 0x%" PRIx32 "\n", rest->e_version);
@@ -282,4 +187,104 @@ void print_elf_rest_header(ELFHeaderRest *rest) {
   printf("Size of section header: %u (bytes)\n", rest->e_shentsize);
   printf("Number of section headers: %u\n", rest->e_shnum);
   printf("Section header string table index: %u\n", rest->e_shstrndx);
+}
+
+void print_ident_info(ELFIdent *info) {
+  printf("ELF Class: ");
+  switch (info->ei_class) {
+  case ELF32:
+    printf("ELF32\n");
+    break;
+  case ELF64:
+    printf("ELF64\n");
+    break;
+
+  default:
+    printf("Unknown: (%u)\n", info->ei_class);
+    break;
+  }
+
+  printf("Endianess: ");
+  switch (info->ei_data) {
+  case LittleEndian:
+    printf("Little Endian\n");
+    break;
+  case BigEndian:
+    printf("Big Endian\n");
+    break;
+  default:
+    printf("Unknown (%u)\n", info->ei_data);
+  }
+
+  printf("ELF Version: %u\n", info->ei_version);
+  print_osabi(info->ei_osabi);
+
+  printf("ABI Version: %u\n", info->ei_abiversion);
+}
+
+void print_osabi(unsigned char ei_osabi) {
+  // ident.c
+  printf("ABI: ");
+  switch (ei_osabi) {
+  case ELFOSABI_SYSV:
+    printf("System V\n");
+    break;
+  case ELFOSABI_HPUX:
+    printf("HP-UX\n");
+    break;
+  case ELFOSABI_NETBSD:
+    printf("NetBSD\n");
+    break;
+  case ELFOSABI_LINUX:
+    printf("Linux\n");
+    break;
+  case ELFOSABI_HURD:
+    printf("GNU Hurd\n");
+    break;
+  case ELFOSABI_SOLARIS:
+    printf("Solaris\n");
+    break;
+  case ELFOSABI_AIX:
+    printf("AIX\n");
+    break;
+  case ELFOSABI_IRIX:
+    printf("IRIX\n");
+    break;
+  case ELFOSABI_FREEBSD:
+    printf("FreeBSD\n");
+    break;
+  case ELFOSABI_TRU64:
+    printf("Tru64\n");
+    break;
+  case ELFOSABI_MODESTO:
+    printf("Novell Modesto\n");
+    break;
+  case ELFOSABI_OPENBSD:
+    printf("OpenBSD\n");
+    break;
+  case ELFOSABI_OPENVMS:
+    printf("OpenVMS\n");
+    break;
+  case ELFOSABI_NSK:
+    printf("NonStop Kernel\n");
+    break;
+  case ELFOSABI_AROS:
+    printf("AROS\n");
+    break;
+  case ELFOSABI_FENIXOS:
+    printf("FenixOS\n");
+    break;
+  case ELFOSABI_CLOUDABI:
+    printf("CloudABI\n");
+    break;
+  case ELFOSABI_OPENVOS:
+    printf("Open VOS\n");
+    break;
+  default:
+    if (ei_osabi >= 64)
+      printf("Architecture-specific (%u)\n", ei_osabi);
+    else
+      printf("Unknown (%u)\n", ei_osabi);
+    break;
+  }
 }

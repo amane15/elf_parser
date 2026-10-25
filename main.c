@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
 
   print_ident_info(ident);
 
-  ELFHeaderRest *rest = parse_rest_header(&parser);
+  ELFHeader *rest = parse_rest_header(&parser);
   if (rest == NULL) {
     fprintf(stderr, "Error: while parsing rest of the elf header\n");
     fclose(file);
@@ -59,6 +59,7 @@ int main(int argc, char *argv[]) {
   free(rest);
 
   free_phdr_table(phdrs_table);
+  free_dyn_table(dyn_table);
 
   fclose(file);
   return 0;

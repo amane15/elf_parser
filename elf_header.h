@@ -30,12 +30,11 @@ typedef struct {
   uint16_t e_shentsize;
   uint16_t e_shnum;
   uint16_t e_shstrndx;
-} ELFHeaderRest;
+} ELFHeader;
 
 void print_ident_info(ELFIdent *info);
 void print_osabi(unsigned char ei_osabi);
 ELFIdent *parse_ident_header(Parser *parser);
-ELFHeaderRest *parse_rest_header(Parser *parser);
-void print_elf_rest_header(ELFHeaderRest *header);
-
+ELFHeader *parse_rest_header(Parser *parser);
+void print_elf_rest_header(ELFHeader *header);
 #endif
